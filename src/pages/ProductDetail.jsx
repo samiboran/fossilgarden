@@ -34,6 +34,18 @@ function ProductDetail() {
         fontSize: '.6rem', letterSpacing: '.1em', textTransform: 'uppercase',
         color: 'var(--muted)', borderBottom: '1px solid var(--border)'
       }}>
+        <button
+  onClick={() => navigate('/')}
+  style={{
+    background: 'none', border: 'none', cursor: 'pointer',
+    fontSize: '.68rem', letterSpacing: '.14em', textTransform: 'uppercase',
+    color: 'var(--muted)', display: 'flex', alignItems: 'center', gap: '.4rem',
+    padding: 0
+  }}
+>
+  ← Geri
+</button>
+<span style={{ opacity: .35 }}>/</span>
         <span style={{ cursor: 'pointer' }} onClick={() => navigate('/')}>Fossil Garden</span>
         <span style={{ opacity: .35 }}>/</span>
         <span style={{ cursor: 'pointer' }} onClick={() => navigate('/')}>

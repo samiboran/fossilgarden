@@ -6,7 +6,7 @@ import './styles/global.css'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <BrowserRouter>
+    <BrowserRouter basename="/fossilgarden">
       <App />
     </BrowserRouter>
   </StrictMode>
