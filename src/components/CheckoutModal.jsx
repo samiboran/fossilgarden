@@ -8,40 +8,48 @@ export default function CheckoutModal({ open, onClose, items, total, onSuccess }
 
   if (!open) return null
 
-async function handleSubmit() {
-  if (!form.name || !form.phone || !form.address) {
-    setError('Ad, telefon ve adres zorunludur.')
-    return
-  }
-  setSaving(true)
-  setError('')
-
-  const order = {
-    name: form.name,
-    email: form.email,
-    phone: form.phone,
-    address: form.address,
-    items: items,
-    total: total,
-  }
-
-  const { error } = await supabase.from('orders').insert(order)
-  if (error) { setSaving(false); setError('Sipariş gönderilemedi: ' + error.message); return }
-
-  // Mail gönder
-  try {
-    await fetch('https://qrbkzjosorimiwdbwyyl.supabase.co/functions/v1/send-order-email', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}` },
-      body: JSON.stringify({ order })
-    })
-  } catch (e) {
-    console.error('Mail gönderilemedi:', e)
-  }
-
-  setSaving(false)
-  onSuccess()
+  async function handleSubmit() {
+    if (!form.email?.trim() || !form.email.includes('@')) {
+  setError('Geçerli bir e-posta adresi giriniz.')
+  return
 }
+    if (!form.phone?.trim() || form.phone.trim().length < 10) {
+      setError('Geçerli bir telefon numarası giriniz.')
+      return
+    }
+    if (!form.address?.trim() || form.address.trim().length < 10) {
+      setError('Geçerli bir adres giriniz.')
+      return
+    }
+
+    setSaving(true)
+    setError('')
+
+    const order = {
+      name: form.name,
+      email: form.email,
+      phone: form.phone,
+      address: form.address,
+      items: items,
+      total: total,
+    }
+
+    const { error } = await supabase.from('orders').insert(order)
+    if (error) { setSaving(false); setError('Sipariş gönderilemedi: ' + error.message); return }
+
+    try {
+      await fetch('https://qrbkzjosorimiwdbwyyl.supabase.co/functions/v1/send-order-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}` },
+        body: JSON.stringify({ order })
+      })
+    } catch (e) {
+      console.error('Mail gönderilemedi:', e)
+    }
+
+    setSaving(false)
+    onSuccess()
+  }
 
   const inp = {
     width: '100%', padding: '.65rem .85rem',
@@ -52,13 +60,11 @@ async function handleSubmit() {
 
   return (
     <>
-      {/* Overlay */}
       <div onClick={onClose} style={{
         position: 'fixed', inset: 0, zIndex: 400,
         background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(3px)'
       }} />
 
-      {/* Modal */}
       <div style={{
         position: 'fixed', top: '50%', left: '50%', zIndex: 401,
         transform: 'translate(-50%, -50%)',
@@ -66,7 +72,6 @@ async function handleSubmit() {
         background: '#fff', padding: '2.5rem',
         fontFamily: "'DM Sans', sans-serif"
       }}>
-        {/* Başlık */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.8rem' }}>
           <div>
             <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.7rem', fontWeight: 300, margin: 0 }}>
@@ -79,18 +84,16 @@ async function handleSubmit() {
           <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: '1.4rem', cursor: 'pointer', color: '#aaa' }}>×</button>
         </div>
 
-        {/* Form */}
         <input style={inp} placeholder="Ad Soyad *" value={form.name}
           onChange={e => setForm(f => ({ ...f, name: e.target.value }))} />
-        <input style={inp} placeholder="E-posta" type="email" value={form.email}
+        <input style={inp} placeholder="E-posta *" type="email" value={form.email}
           onChange={e => setForm(f => ({ ...f, email: e.target.value }))} />
-        <input style={inp} placeholder="Telefon *" value={form.phone}
-          onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} />
+        <input style={inp} placeholder="Telefon *" value={form.phone} type="tel"
+  onChange={e => setForm(f => ({ ...f, phone: e.target.value.replace(/[^0-9]/g, '') }))} />
         <textarea style={{ ...inp, minHeight: 80, resize: 'vertical' }}
           placeholder="Teslimat adresi *" value={form.address}
           onChange={e => setForm(f => ({ ...f, address: e.target.value }))} />
 
-        {/* Özet */}
         <div style={{ background: '#fafafa', padding: '1rem', marginBottom: '1.2rem', fontSize: '.78rem', lineHeight: 1.8 }}>
           {items.map(item => (
             <div key={item.key} style={{ display: 'flex', justifyContent: 'space-between' }}>
