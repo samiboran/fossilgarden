@@ -7,7 +7,7 @@ const TAGS = ['tümü', 'fotoğraf', 'resim', 'baskı', 'heykel', 'landscape', '
 
 function Gallery() {
   const [searchParams] = useSearchParams()
-  const [activeTag, setActiveTag] = useState(searchParams.get('category') || 'tümü')
+  const [activeTag, setActiveTag] = useState((searchParams.get('category') || 'tümü').toLowerCase())
   const [search, setSearch] = useState(searchParams.get('search') || '')
   const [artworks, setArtworks] = useState([])
   const [loading, setLoading] = useState(true)

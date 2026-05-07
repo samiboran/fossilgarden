@@ -112,7 +112,8 @@ function Admin() {
   const STATUS_LABELS = { yeni: 'Yeni', hazirlaniyor: 'Hazırlanıyor', kargoda: 'Kargoda', teslim: 'Teslim Edildi', iptal: 'İptal' }
 
   return (
-    <div style={{ display: 'flex', height: '100vh', fontFamily: "'DM Sans', sans-serif", paddingTop: '4.2rem' }}>
+  <div style={{ display: 'flex', height: '100vh', fontFamily: "'DM Sans', sans-serif", paddingTop: '4.2rem' }}>
+    <style>{`nav { display: none !important; }`}</style>
 
       {/* Sol panel */}
       <div style={{ width: 280, borderRight: '1px solid #eee', display: 'flex', flexDirection: 'column', flexShrink: 0 }}>

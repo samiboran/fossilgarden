@@ -26,7 +26,6 @@ function Navbar({ cartCount = 0, onCartClick }) {
         borderBottom: '1px solid var(--border)'
       }}>
 
-        {/* Logo */}
         <Link to="/" style={{
           fontFamily: "'Cormorant Garamond', serif",
           fontSize: '1.4rem', fontWeight: 600,
@@ -42,7 +41,6 @@ function Navbar({ cartCount = 0, onCartClick }) {
           Fossil Garden
         </Link>
 
-        {/* Desktop menü */}
         <ul style={{ display: 'flex', gap: '2rem', listStyle: 'none', margin: 0, padding: 0 }}
           className="desktop-nav">
           {CATS.map(cat => (
@@ -57,7 +55,6 @@ function Navbar({ cartCount = 0, onCartClick }) {
           ))}
         </ul>
 
-        {/* Sağ — arama + sepet + hamburger */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
           <div style={{ position: 'relative' }} className="desktop-nav">
             <input
@@ -79,18 +76,14 @@ function Navbar({ cartCount = 0, onCartClick }) {
             }}>⌕</span>
           </div>
 
-          <button
-  onClick={onCartClick}
-  style={{
-    background: 'none', border: 'none',
-    fontSize: '.68rem', letterSpacing: '.14em',
-    textTransform: 'uppercase', color: 'var(--muted)', cursor: 'pointer'
-  }}
->
-  Sepet ({cartCount})
-</button>
+          <button onClick={onCartClick} style={{
+            background: 'none', border: 'none',
+            fontSize: '.68rem', letterSpacing: '.14em',
+            textTransform: 'uppercase', color: 'var(--muted)', cursor: 'pointer'
+          }}>
+            Sepet ({cartCount})
+          </button>
 
-          {/* Hamburger — sadece mobilde */}
           <button
             onClick={() => setMenuOpen(!menuOpen)}
             className="hamburger"
@@ -109,7 +102,6 @@ function Navbar({ cartCount = 0, onCartClick }) {
         </div>
       </nav>
 
-      {/* Mobil dropdown menü */}
       {menuOpen && (
         <div style={{
           position: 'fixed', top: '4.2rem', left: 0, right: 0, zIndex: 199,
@@ -119,7 +111,6 @@ function Navbar({ cartCount = 0, onCartClick }) {
           padding: '1.5rem 2rem 2rem',
           display: 'flex', flexDirection: 'column', gap: '1.2rem'
         }}>
-          {/* Mobil arama */}
           <div style={{ position: 'relative' }}>
             <input
               type="text"
@@ -138,7 +129,6 @@ function Navbar({ cartCount = 0, onCartClick }) {
             <span style={{ position: 'absolute', right: '.6rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--muted)' }}>⌕</span>
           </div>
 
-          {/* Mobil linkler */}
           {CATS.map(cat => (
             <Link
               key={cat}
@@ -156,7 +146,6 @@ function Navbar({ cartCount = 0, onCartClick }) {
         </div>
       )}
 
-      {/* Mobil CSS */}
       <style>{`
         @media (max-width: 768px) {
           .desktop-nav { display: none !important; }

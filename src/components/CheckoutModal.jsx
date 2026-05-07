@@ -8,25 +8,40 @@ export default function CheckoutModal({ open, onClose, items, total, onSuccess }
 
   if (!open) return null
 
-  async function handleSubmit() {
-    if (!form.name || !form.phone || !form.address) {
-      setError('Ad, telefon ve adres zorunludur.')
-      return
-    }
-    setSaving(true)
-    setError('')
-    const { error } = await supabase.from('orders').insert({
-      name: form.name,
-      email: form.email,
-      phone: form.phone,
-      address: form.address,
-      items: items,
-      total: total,
-    })
-    setSaving(false)
-    if (error) { setError('Sipariş gönderilemedi: ' + error.message); return }
-    onSuccess()
+async function handleSubmit() {
+  if (!form.name || !form.phone || !form.address) {
+    setError('Ad, telefon ve adres zorunludur.')
+    return
   }
+  setSaving(true)
+  setError('')
+
+  const order = {
+    name: form.name,
+    email: form.email,
+    phone: form.phone,
+    address: form.address,
+    items: items,
+    total: total,
+  }
+
+  const { error } = await supabase.from('orders').insert(order)
+  if (error) { setSaving(false); setError('Sipariş gönderilemedi: ' + error.message); return }
+
+  // Mail gönder
+  try {
+    await fetch('https://qrbkzjosorimiwdbwyyl.supabase.co/functions/v1/send-order-email', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}` },
+      body: JSON.stringify({ order })
+    })
+  } catch (e) {
+    console.error('Mail gönderilemedi:', e)
+  }
+
+  setSaving(false)
+  onSuccess()
+}
 
   const inp = {
     width: '100%', padding: '.65rem .85rem',

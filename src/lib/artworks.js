@@ -7,7 +7,12 @@ export async function fetchArtworks({ tag, search } = {}) {
     .order('created_at', { ascending: false })
 
   if (tag) {
-    query = query.contains('tags', [tag])
+    const mainCats = ['fotoğraf', 'resim', 'baskı', 'heykel']
+    if (mainCats.includes(tag.toLowerCase())) {
+      query = query.ilike('medium', tag)
+    } else {
+      query = query.contains('tags', [tag])
+    }
   }
 
   if (search) {
@@ -15,10 +20,7 @@ export async function fetchArtworks({ tag, search } = {}) {
   }
 
   const { data, error } = await query
-  if (error) {
-    console.error('Fetch hatası:', error.message)
-    return []
-  }
+  if (error) { console.error('Fetch hatası:', error.message); return [] }
   return data
 }
 
@@ -28,10 +30,6 @@ export async function fetchArtworkBySlug(slug) {
     .select('*')
     .eq('slug', slug)
     .single()
-
-  if (error) {
-    console.error('Slug hatası:', error.message)
-    return null
-  }
+  if (error) { console.error('Slug hatası:', error.message); return null }
   return data
 }
