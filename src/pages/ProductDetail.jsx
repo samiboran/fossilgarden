@@ -1,14 +1,33 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ARTWORKS } from '../lib/artworks'
+import { fetchArtworkBySlug } from '../lib/artworks'
 import { makeSVG } from '../lib/makeSVG'
+import { useCart } from '../hooks/useCart'
 
 function ProductDetail() {
-  const { id } = useParams()
+  const { slug } = useParams()
+  const { addItem } = useCart()
+  const [added, setAdded] = useState(false)
   const navigate = useNavigate()
-  const artwork = ARTWORKS.find(a => a.id === parseInt(id))
-  const [activeSize, setActiveSize] = useState('61 × 76 cm')
+  const [artwork, setArtwork] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [activeSize, setActiveSize] = useState(null)
   const [openAcc, setOpenAcc] = useState('desc')
+
+  useEffect(() => {
+    fetchArtworkBySlug(slug)
+      .then(data => {
+        setArtwork(data)
+        if (data?.sizes?.length) setActiveSize(data.sizes[0].label)
+      })
+      .finally(() => setLoading(false))
+  }, [slug])
+
+  if (loading) return (
+    <div style={{ paddingTop: '8rem', textAlign: 'center', fontFamily: "'Cormorant Garamond', serif", fontSize: '1.5rem', color: 'var(--muted)', fontStyle: 'italic' }}>
+      Yükleniyor…
+    </div>
+  )
 
   if (!artwork) return (
     <div style={{ paddingTop: '8rem', textAlign: 'center', fontFamily: "'Cormorant Garamond', serif", fontSize: '1.5rem', color: 'var(--muted)' }}>
@@ -16,10 +35,10 @@ function ProductDetail() {
     </div>
   )
 
-  const sizes = ['40 × 50 cm', '61 × 76 cm', '76 × 102 cm']
+  const activePrice = artwork.sizes?.find(s => s.label === activeSize)?.price
   const accs = [
-    { key: 'desc', label: 'Eser Hakkında', content: artwork.desc },
-    { key: 'specs', label: 'Teknik Detaylar', content: null },
+    { key: 'desc', label: 'Eser Hakkında', content: artwork.description },
+    { key: 'specs', label: 'Teknik Detaylar', content: `${artwork.medium || '—'} · ${artwork.year || '—'}` },
     { key: 'ship', label: 'Kargo & İade', content: 'Yurt içi kargo ücretsiz, 3–5 iş günü. Eserler özel ambalajla gönderilir. 14 gün içinde iade edilebilir.' },
     { key: 'cert', label: 'Sertifika', content: 'Her eser sanatçı imzalı, numaralı orijinallik sertifikası ile gelir.' },
   ]
@@ -35,22 +54,17 @@ function ProductDetail() {
         color: 'var(--muted)', borderBottom: '1px solid var(--border)'
       }}>
         <button
-  onClick={() => navigate('/')}
-  style={{
-    background: 'none', border: 'none', cursor: 'pointer',
-    fontSize: '.68rem', letterSpacing: '.14em', textTransform: 'uppercase',
-    color: 'var(--muted)', display: 'flex', alignItems: 'center', gap: '.4rem',
-    padding: 0
-  }}
->
-  ← Geri
-</button>
-<span style={{ opacity: .35 }}>/</span>
-        <span style={{ cursor: 'pointer' }} onClick={() => navigate('/')}>Fossil Garden</span>
+          onClick={() => navigate('/')}
+          style={{
+            background: 'none', border: 'none', cursor: 'pointer',
+            fontSize: '.68rem', letterSpacing: '.14em', textTransform: 'uppercase',
+            color: 'var(--muted)', display: 'flex', alignItems: 'center', gap: '.4rem', padding: 0
+          }}
+        >
+          ← Geri
+        </button>
         <span style={{ opacity: .35 }}>/</span>
-        <span style={{ cursor: 'pointer' }} onClick={() => navigate('/')}>
-          {artwork.cat.charAt(0).toUpperCase() + artwork.cat.slice(1)}
-        </span>
+        <span style={{ cursor: 'pointer' }} onClick={() => navigate('/')}>Fossil Garden</span>
         <span style={{ opacity: .35 }}>/</span>
         <span style={{ color: 'var(--ink)' }}>{artwork.title}</span>
       </div>
@@ -69,11 +83,15 @@ function ProductDetail() {
           gap: '.8rem', paddingRight: '3rem', paddingTop: '1.5rem', paddingBottom: '1.5rem'
         }}>
           <div style={{ flex: 1, overflow: 'hidden', background: 'var(--surface)', position: 'relative' }}>
-            <div style={{ position: 'absolute', top: '.9rem', left: '.9rem', zIndex: 2, background: 'var(--ink)', color: '#fff', fontSize: '.56rem', letterSpacing: '.18em', textTransform: 'uppercase', padding: '.28rem .7rem' }}>
-              {artwork.edition}
-            </div>
-            <div dangerouslySetInnerHTML={{ __html: makeSVG(artwork.id) }}
-              style={{ width: '100%', height: '100%' }} />
+            {artwork.is_original && (
+              <div style={{ position: 'absolute', top: '.9rem', left: '.9rem', zIndex: 2, background: 'var(--ink)', color: '#fff', fontSize: '.56rem', letterSpacing: '.18em', textTransform: 'uppercase', padding: '.28rem .7rem' }}>
+                Orijinal
+              </div>
+            )}
+            {artwork.image_url
+              ? <img src={artwork.image_url} alt={artwork.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              : <div dangerouslySetInnerHTML={{ __html: makeSVG(0) }} style={{ width: '100%', height: '100%' }} />
+            }
           </div>
         </div>
 
@@ -91,59 +109,71 @@ function ProductDetail() {
               {artwork.artist.split(' ').map(w => w[0]).join('').slice(0, 2)}
             </div>
             <div>
-              <div style={{ fontSize: '.72rem', fontWeight: 500, color: 'var(--ink)', marginBottom: '.1rem' }}>
-                {artwork.artist}
-              </div>
+              <div style={{ fontSize: '.72rem', fontWeight: 500, color: 'var(--ink)' }}>{artwork.artist}</div>
               <div style={{ fontSize: '.65rem', letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--muted)' }}>
-                {artwork.sub}
+                {artwork.medium}
               </div>
             </div>
           </div>
 
-          <div style={{ color: 'var(--gold)', fontSize: '.78rem', marginBottom: '1.1rem' }}>
-            ★★★★★ <span style={{ color: 'var(--muted)', fontSize: '.6rem', marginLeft: '.3rem' }}>{artwork.reviews}</span>
-          </div>
-
           <h1 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 'clamp(1.9rem, 2.8vw, 2.8rem)', fontWeight: 300, lineHeight: 1.1, marginBottom: '.3rem' }}>
-            <em style={{ fontStyle: 'italic', color: 'var(--gold)' }}>{artwork.em}</em>{' '}
-            {artwork.title.replace(artwork.em, '').trim()}
+            {artwork.title}
           </h1>
           <div style={{ fontSize: '.6rem', letterSpacing: '.14em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '1.4rem' }}>
-            {artwork.year} · {artwork.type}
+            {artwork.year} · {artwork.medium}
           </div>
 
           <hr style={{ border: 'none', borderTop: '1px solid var(--border)', margin: '1.4rem 0' }} />
 
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: '.8rem', marginBottom: '1.3rem' }}>
-            <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '2.1rem' }}>{artwork.price}</div>
-            <div style={{ fontSize: '.6rem', letterSpacing: '.1em', textTransform: 'uppercase', color: 'var(--muted)' }}>KDV dahil · Ücretsiz kargo</div>
-          </div>
+          {activePrice && (
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: '.8rem', marginBottom: '1.3rem' }}>
+              <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '2.1rem' }}>
+                ₺{activePrice.toLocaleString('tr-TR')}
+              </div>
+              <div style={{ fontSize: '.6rem', letterSpacing: '.1em', textTransform: 'uppercase', color: 'var(--muted)' }}>
+                KDV dahil · Ücretsiz kargo
+              </div>
+            </div>
+          )}
 
           {/* Boyut */}
-          <div style={{ fontSize: '.58rem', letterSpacing: '.18em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '.65rem' }}>Boyut</div>
-          <div style={{ display: 'flex', gap: '.45rem', marginBottom: '1.4rem' }}>
-            {sizes.map(s => (
-              <button key={s} onClick={() => setActiveSize(s)} style={{
-                padding: '.45rem .85rem',
-                border: `1px solid ${activeSize === s ? 'var(--ink)' : 'var(--border)'}`,
-                background: activeSize === s ? 'var(--ink)' : 'none',
-                color: activeSize === s ? '#fff' : 'var(--ink)',
-                fontSize: '.64rem', letterSpacing: '.1em', cursor: 'pointer'
-              }}>
-                {s}
-              </button>
-            ))}
-          </div>
+          {artwork.sizes?.length > 0 && (
+            <>
+              <div style={{ fontSize: '.58rem', letterSpacing: '.18em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '.65rem' }}>Boyut</div>
+              <div style={{ display: 'flex', gap: '.45rem', marginBottom: '1.4rem' }}>
+                {artwork.sizes.map(s => (
+                  <button key={s.label} onClick={() => setActiveSize(s.label)} style={{
+                    padding: '.45rem .85rem',
+                    border: `1px solid ${activeSize === s.label ? 'var(--ink)' : 'var(--border)'}`,
+                    background: activeSize === s.label ? 'var(--ink)' : 'none',
+                    color: activeSize === s.label ? '#fff' : 'var(--ink)',
+                    fontSize: '.64rem', letterSpacing: '.1em', cursor: 'pointer'
+                  }}>
+                    {s.label}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
 
           {/* CTA */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '.6rem', marginBottom: '1.4rem' }}>
-            <button style={{ width: '100%', padding: '.9rem', background: 'var(--ink)', color: '#fff', border: 'none', fontSize: '.68rem', letterSpacing: '.2em', textTransform: 'uppercase', cursor: 'pointer' }}>
-              Sepete Ekle
-            </button>
-            <button style={{ width: '100%', padding: '.85rem', background: 'none', color: 'var(--ink)', border: '1px solid var(--border)', fontSize: '.68rem', letterSpacing: '.2em', textTransform: 'uppercase', cursor: 'pointer' }}>
-              Teklif Ver
-            </button>
-          </div>
+          <button
+  onClick={() => {
+    addItem(artwork, activeSize, Number(activePrice) || 0)
+setAdded(true)
+setTimeout(() => setAdded(false), 1800)
+    
+  }}
+  style={{
+    width: '100%', padding: '.9rem',
+    background: added ? 'var(--gold)' : 'var(--ink)',
+    color: '#fff', border: 'none',
+    fontSize: '.68rem', letterSpacing: '.2em', textTransform: 'uppercase',
+    cursor: 'pointer', transition: 'background .3s'
+  }}
+>
+  {added ? '✓ Sepete Eklendi' : 'Sepete Ekle'}
+</button>
 
           {/* Garanti */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '.85rem', padding: '.85rem 1rem', background: 'var(--surface)', borderLeft: '2px solid var(--gold)', marginBottom: '1.6rem' }}>
@@ -155,18 +185,22 @@ function ProductDetail() {
           </div>
 
           {/* Etiketler */}
-          <div style={{ fontSize: '.58rem', letterSpacing: '.18em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '.65rem' }}>Etiketler</div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '.4rem', marginBottom: '1.4rem' }}>
-            {artwork.tags.map(tag => (
-              <span key={tag} onClick={() => navigate(`/?category=${tag}`)} style={{
-                fontSize: '.6rem', letterSpacing: '.1em', textTransform: 'uppercase',
-                color: 'var(--gold)', padding: '.25rem .65rem',
-                border: '1px solid rgba(154,122,74,.28)', cursor: 'pointer'
-              }}>
-                #{tag}
-              </span>
-            ))}
-          </div>
+          {artwork.tags?.length > 0 && (
+            <>
+              <div style={{ fontSize: '.58rem', letterSpacing: '.18em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '.65rem' }}>Etiketler</div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '.4rem', marginBottom: '1.4rem' }}>
+                {artwork.tags.map(tag => (
+                  <span key={tag} onClick={() => navigate(`/?category=${tag}`)} style={{
+                    fontSize: '.6rem', letterSpacing: '.1em', textTransform: 'uppercase',
+                    color: 'var(--gold)', padding: '.25rem .65rem',
+                    border: '1px solid rgba(154,122,74,.28)', cursor: 'pointer'
+                  }}>
+                    #{tag}
+                  </span>
+                ))}
+              </div>
+            </>
+          )}
 
           {/* Accordion */}
           <div style={{ borderTop: '1px solid var(--border)' }}>
@@ -185,16 +219,7 @@ function ProductDetail() {
                 </button>
                 {openAcc === acc.key && (
                   <div style={{ paddingBottom: '1rem', fontSize: '.76rem', lineHeight: 1.9, color: '#555' }}>
-                    {acc.key === 'specs' ? (
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '.45rem 2rem' }}>
-                        {Object.entries(artwork.specs).map(([k, v]) => (
-                          <div key={k}>
-                            <div style={{ fontSize: '.58rem', letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '.1rem' }}>{k}</div>
-                            <div style={{ fontSize: '.73rem', color: 'var(--ink)' }}>{v}</div>
-                          </div>
-                        ))}
-                      </div>
-                    ) : acc.content}
+                    {acc.content}
                   </div>
                 )}
               </div>

@@ -1,6 +1,6 @@
-import { useState, useMemo } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { ARTWORKS } from '../lib/artworks'
+import { fetchArtworks } from '../lib/artworks'
 import ArtCard from '../components/ArtCard'
 
 const TAGS = ['tümü', 'fotoğraf', 'resim', 'baskı', 'heykel', 'landscape', 'botanik', 'siyah-beyaz', 'portre', 'soyut', 'deniz']
@@ -9,19 +9,18 @@ function Gallery() {
   const [searchParams] = useSearchParams()
   const [activeTag, setActiveTag] = useState(searchParams.get('category') || 'tümü')
   const [search, setSearch] = useState(searchParams.get('search') || '')
+  const [artworks, setArtworks] = useState([])
+  const [loading, setLoading] = useState(true)
   const navigate = useNavigate()
 
-  const filtered = useMemo(() => {
-    const q = search.toLowerCase().trim()
-    return ARTWORKS.filter(a => {
-      const tagMatch = activeTag === 'tümü' || a.cat === activeTag || a.tags.includes(activeTag)
-      const searchMatch = !q ||
-        a.title.toLowerCase().includes(q) ||
-        a.artist.toLowerCase().includes(q) ||
-        a.tags.some(t => t.toLowerCase().includes(q)) ||
-        a.cat.toLowerCase().includes(q)
-      return tagMatch && searchMatch
+  useEffect(() => {
+    setLoading(true)
+    fetchArtworks({
+      tag: activeTag === 'tümü' ? null : activeTag,
+      search: search.trim() || null
     })
+      .then(setArtworks)
+      .finally(() => setLoading(false))
   }, [activeTag, search])
 
   return (
@@ -51,7 +50,7 @@ function Gallery() {
           </p>
         </div>
         <div style={{ fontSize: '.7rem', letterSpacing: '.1em', textTransform: 'uppercase', color: 'var(--muted)' }}>
-          {filtered.length} eser
+          {loading ? '...' : `${artworks.length} eser`}
         </div>
       </div>
 
@@ -122,7 +121,15 @@ function Gallery() {
 
       {/* Grid */}
       <div style={{ margin: '0 2rem' }}>
-        {filtered.length === 0 ? (
+        {loading ? (
+          <div style={{
+            textAlign: 'center', padding: '6rem 2rem',
+            fontFamily: "'Cormorant Garamond', serif",
+            fontSize: '1.5rem', color: '#bbb', fontStyle: 'italic'
+          }}>
+            Yükleniyor…
+          </div>
+        ) : artworks.length === 0 ? (
           <div style={{
             textAlign: 'center', padding: '6rem 2rem',
             fontFamily: "'Cormorant Garamond', serif",
@@ -136,13 +143,13 @@ function Gallery() {
             gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
             borderTop: '1px solid var(--border)'
           }}>
-            {filtered.map((artwork, i) => (
+            {artworks.map((artwork, i) => (
               <ArtCard
                 key={artwork.id}
                 artwork={artwork}
                 index={i}
                 onTagClick={(tag) => setActiveTag(tag)}
-                onClick={() => navigate(`/product/${artwork.id}`)}
+                onClick={() => navigate(`/product/${artwork.slug}`)}
               />
             ))}
           </div>

@@ -19,11 +19,14 @@ function ArtCard({ artwork, index, onClick, onTagClick }) {
         animation: `fadeUp .4s ease ${index * 0.04}s both`
       }}
     >
-      {/* Görsel */}
-      <div style={{ aspectRatio: '4/5', overflow: 'hidden', position: 'relative', background: 'var(--surface)' }}>
-        <div dangerouslySetInnerHTML={{ __html: makeSVG(artwork.id) }}
-          style={{ width: '100%', height: '100%' }} />
-
+   {/* Görsel */}
+<div style={{ aspectRatio: '4/5', overflow: 'hidden', position: 'relative', background: 'var(--surface)' }}>
+  {artwork.image_url
+    ? <img src={artwork.image_url} alt={artwork.title}
+        style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+    : <div dangerouslySetInnerHTML={{ __html: makeSVG(index) }}
+        style={{ width: '100%', height: '100%' }} />
+  }
         {/* Edisyon badge */}
         <div style={{
           position: 'absolute', top: '.75rem', left: '.75rem',
