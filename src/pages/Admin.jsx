@@ -107,18 +107,15 @@ function Admin() {
 
   const inp = { width: '100%', padding: '.6rem .8rem', border: '1px solid #ddd', fontSize: '.85rem', fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }
   const label = { fontSize: '.62rem', letterSpacing: '.12em', textTransform: 'uppercase', color: '#888', marginBottom: '.3rem', display: 'block' }
-
   const STATUS_COLORS = { yeni: '#f59e0b', hazirlaniyor: '#3b82f6', kargoda: '#8b5cf6', teslim: '#10b981', iptal: '#ef4444' }
   const STATUS_LABELS = { yeni: 'Yeni', hazirlaniyor: 'Hazırlanıyor', kargoda: 'Kargoda', teslim: 'Teslim Edildi', iptal: 'İptal' }
 
   return (
-  <div style={{ display: 'flex', height: '100vh', fontFamily: "'DM Sans', sans-serif", paddingTop: '4.2rem' }}>
-    <style>{`nav { display: none !important; }`}</style>
+    <div style={{ display: 'flex', height: '100vh', fontFamily: "'DM Sans', sans-serif", paddingTop: '4.2rem' }}>
+      <style>{`nav { display: none !important; }`}</style>
 
       {/* Sol panel */}
       <div style={{ width: 280, borderRight: '1px solid #eee', display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
-
-        {/* Sekmeler */}
         <div style={{ display: 'flex', borderBottom: '1px solid #eee' }}>
           {['eserler', 'siparisler'].map(t => (
             <button key={t} onClick={() => setTab(t)} style={{
@@ -180,7 +177,6 @@ function Admin() {
       <div style={{ flex: 1, overflowY: 'auto', padding: '2rem 3rem' }}>
         <div style={{ maxWidth: 680 }}>
 
-          {/* SİPARİŞ DETAY */}
           {tab === 'siparisler' && (() => {
             const o = orders.find(x => x.id === selected)
             if (!o) return <div style={{ color: '#aaa', paddingTop: '3rem', textAlign: 'center', fontFamily: "'Cormorant Garamond', serif", fontSize: '1.2rem', fontStyle: 'italic' }}>Bir sipariş seçin</div>
@@ -190,7 +186,6 @@ function Admin() {
                   <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.8rem', fontWeight: 300, margin: 0 }}>Sipariş Detayı</h2>
                   <div style={{ fontSize: '.65rem', color: '#aaa' }}>{new Date(o.created_at).toLocaleString('tr-TR')}</div>
                 </div>
-
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
                   {[['Ad Soyad', o.name], ['E-posta', o.email || '—'], ['Telefon', o.phone], ['Adres', o.address]].map(([k, v]) => (
                     <div key={k}>
@@ -199,7 +194,6 @@ function Admin() {
                     </div>
                   ))}
                 </div>
-
                 <div style={{ background: '#fafafa', padding: '1rem', marginBottom: '1.5rem' }}>
                   <div style={{ fontSize: '.6rem', letterSpacing: '.12em', textTransform: 'uppercase', color: '#aaa', marginBottom: '.8rem' }}>Ürünler</div>
                   {(o.items || []).map((item, i) => (
@@ -213,7 +207,6 @@ function Admin() {
                     <span>₺{Number(o.total).toLocaleString('tr-TR')}</span>
                   </div>
                 </div>
-
                 <div>
                   <div style={{ fontSize: '.6rem', letterSpacing: '.12em', textTransform: 'uppercase', color: '#aaa', marginBottom: '.6rem' }}>Durum Güncelle</div>
                   <div style={{ display: 'flex', gap: '.5rem', flexWrap: 'wrap' }}>
@@ -231,7 +224,6 @@ function Admin() {
             )
           })()}
 
-          {/* ESER FORMU */}
           {tab === 'eserler' && (
             <>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
@@ -245,13 +237,37 @@ function Admin() {
 
               <div style={{ marginBottom: '1.5rem' }}>
                 <span style={label}>Görsel</span>
-                <div onClick={() => fileRef.current.click()} onDragOver={e => e.preventDefault()} onDrop={e => { e.preventDefault(); uploadImage(e.dataTransfer.files[0]) }}
-                  style={{ border: '2px dashed #ddd', padding: '2rem', textAlign: 'center', cursor: 'pointer', background: '#fafafa', minHeight: 160, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  {uploading ? <span style={{ color: '#aaa' }}>Yükleniyor…</span>
-                    : form.image_url ? <img src={form.image_url} alt="" style={{ maxHeight: 200, maxWidth: '100%', objectFit: 'contain' }} />
-                    : <span style={{ color: '#bbb' }}>Sürükle & bırak veya tıkla</span>}
+                <div
+                  onClick={() => fileRef.current.click()}
+                  onDragOver={e => e.preventDefault()}
+                  onDrop={e => { e.preventDefault(); uploadImage(e.dataTransfer.files[0]) }}
+                  style={{
+                    border: '2px dashed #ddd', padding: '2rem', textAlign: 'center',
+                    cursor: 'pointer', background: '#fafafa',
+                    minHeight: 160, display: 'flex', alignItems: 'center', justifyContent: 'center'
+                  }}
+                >
+                  {uploading ? (
+                    <span style={{ color: '#aaa', fontSize: '.85rem' }}>Yükleniyor…</span>
+                  ) : form.image_url ? (
+                    <div style={{ position: 'relative', display: 'inline-block' }}>
+                      <img src={form.image_url} alt="" style={{ maxHeight: 200, maxWidth: '100%', objectFit: 'contain' }} />
+                      <button
+                        onClick={e => { e.stopPropagation(); setForm(f => ({ ...f, image_url: '' })) }}
+                        style={{
+                          position: 'absolute', top: -8, right: -8,
+                          background: '#cc4444', color: '#fff', border: 'none',
+                          borderRadius: '50%', width: 22, height: 22,
+                          cursor: 'pointer', fontSize: '.8rem', lineHeight: 1
+                        }}
+                      >×</button>
+                    </div>
+                  ) : (
+                    <span style={{ color: '#bbb', fontSize: '.85rem' }}>Sürükle & bırak veya tıkla</span>
+                  )}
                 </div>
-                <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={e => e.target.files[0] && uploadImage(e.target.files[0])} />
+                <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }}
+                  onChange={e => e.target.files[0] && uploadImage(e.target.files[0])} />
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
@@ -262,7 +278,7 @@ function Admin() {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
                 <div><span style={label}>Sanatçı</span><input style={inp} value={form.artist} onChange={e => setForm(f => ({ ...f, artist: e.target.value }))} /></div>
                 <div><span style={label}>Yıl</span><input style={inp} type="number" value={form.year} onChange={e => setForm(f => ({ ...f, year: Number(e.target.value) }))} /></div>
-                <div><span style={label}>Medium</span><input style={inp} value={form.medium} onChange={e => setForm(f => ({ ...f, medium: e.target.value }))} placeholder="Dijital Fine Art" /></div>
+                <div><span style={label}>Medium</span><input style={inp} value={form.medium} onChange={e => setForm(f => ({ ...f, medium: e.target.value }))} placeholder="Fotoğraf" /></div>
               </div>
 
               <div style={{ marginBottom: '1rem' }}>
