@@ -1,0 +1,113 @@
+import { useState } from 'react'
+import { supabase } from '../lib/supabase'
+
+export default function CheckoutModal({ open, onClose, items, total, onSuccess }) {
+  const [form, setForm] = useState({ name: '', email: '', phone: '', address: '' })
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
+
+  if (!open) return null
+
+  async function handleSubmit() {
+    if (!form.name || !form.phone || !form.address) {
+      setError('Ad, telefon ve adres zorunludur.')
+      return
+    }
+    setSaving(true)
+    setError('')
+    const { error } = await supabase.from('orders').insert({
+      name: form.name,
+      email: form.email,
+      phone: form.phone,
+      address: form.address,
+      items: items,
+      total: total,
+    })
+    setSaving(false)
+    if (error) { setError('Sipariş gönderilemedi: ' + error.message); return }
+    onSuccess()
+  }
+
+  const inp = {
+    width: '100%', padding: '.65rem .85rem',
+    border: '1px solid #ddd', fontSize: '.85rem',
+    fontFamily: 'inherit', outline: 'none',
+    boxSizing: 'border-box', marginBottom: '.9rem'
+  }
+
+  return (
+    <>
+      {/* Overlay */}
+      <div onClick={onClose} style={{
+        position: 'fixed', inset: 0, zIndex: 400,
+        background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(3px)'
+      }} />
+
+      {/* Modal */}
+      <div style={{
+        position: 'fixed', top: '50%', left: '50%', zIndex: 401,
+        transform: 'translate(-50%, -50%)',
+        width: 'min(480px, 92vw)',
+        background: '#fff', padding: '2.5rem',
+        fontFamily: "'DM Sans', sans-serif"
+      }}>
+        {/* Başlık */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.8rem' }}>
+          <div>
+            <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.7rem', fontWeight: 300, margin: 0 }}>
+              Sipariş Ver
+            </h2>
+            <div style={{ fontSize: '.68rem', color: '#aaa', letterSpacing: '.1em', marginTop: '.3rem' }}>
+              Toplam: ₺{total.toLocaleString('tr-TR')}
+            </div>
+          </div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: '1.4rem', cursor: 'pointer', color: '#aaa' }}>×</button>
+        </div>
+
+        {/* Form */}
+        <input style={inp} placeholder="Ad Soyad *" value={form.name}
+          onChange={e => setForm(f => ({ ...f, name: e.target.value }))} />
+        <input style={inp} placeholder="E-posta" type="email" value={form.email}
+          onChange={e => setForm(f => ({ ...f, email: e.target.value }))} />
+        <input style={inp} placeholder="Telefon *" value={form.phone}
+          onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} />
+        <textarea style={{ ...inp, minHeight: 80, resize: 'vertical' }}
+          placeholder="Teslimat adresi *" value={form.address}
+          onChange={e => setForm(f => ({ ...f, address: e.target.value }))} />
+
+        {/* Özet */}
+        <div style={{ background: '#fafafa', padding: '1rem', marginBottom: '1.2rem', fontSize: '.78rem', lineHeight: 1.8 }}>
+          {items.map(item => (
+            <div key={item.key} style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span>{item.artwork.title} — {item.size} × {item.qty}</span>
+              <span>₺{(item.price * item.qty).toLocaleString('tr-TR')}</span>
+            </div>
+          ))}
+          <div style={{ borderTop: '1px solid #eee', marginTop: '.6rem', paddingTop: '.6rem', display: 'flex', justifyContent: 'space-between', fontWeight: 600 }}>
+            <span>Toplam</span>
+            <span>₺{total.toLocaleString('tr-TR')}</span>
+          </div>
+        </div>
+
+        {error && <div style={{ color: '#cc4444', fontSize: '.78rem', marginBottom: '.8rem' }}>{error}</div>}
+
+        <button
+          onClick={handleSubmit}
+          disabled={saving}
+          style={{
+            width: '100%', padding: '.9rem',
+            background: '#111', color: '#fff', border: 'none',
+            fontSize: '.68rem', letterSpacing: '.2em', textTransform: 'uppercase',
+            cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? .7 : 1
+          }}
+        >
+          {saving ? 'Gönderiliyor…' : 'Siparişi Onayla'}
+        </button>
+
+        <div style={{ fontSize: '.6rem', textAlign: 'center', color: '#aaa', marginTop: '.8rem', letterSpacing: '.08em' }}>
+          Siparişiniz tarafımıza iletilecek, en kısa sürede sizinle iletişime geçeceğiz.
+        </div>
+      </div>
+    </>
+  )
+}

@@ -1,13 +1,23 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useCart } from '../hooks/useCart'
+import CheckoutModal from './CheckoutModal'
 
 export default function CartSidebar({ open, onClose }) {
-  const { items, removeItem, updateQty, total } = useCart()
+  const { items, removeItem, updateQty, total, clearCart } = useCart()
+  const [checkoutOpen, setCheckoutOpen] = useState(false)
+  const [success, setSuccess] = useState(false)
 
   useEffect(() => {
     document.body.style.overflow = open ? 'hidden' : ''
     return () => { document.body.style.overflow = '' }
   }, [open])
+
+  function handleSuccess() {
+    setCheckoutOpen(false)
+    setSuccess(true)
+    clearCart()
+    setTimeout(() => { setSuccess(false); onClose() }, 3000)
+  }
 
   return (
     <>
@@ -42,7 +52,16 @@ export default function CartSidebar({ open, onClose }) {
         </div>
 
         <div style={{ flex: 1, overflowY: 'auto', padding: '1rem 1.8rem' }}>
-          {items.length === 0 ? (
+          {success ? (
+            <div style={{
+              textAlign: 'center', paddingTop: '4rem',
+              fontFamily: "'Cormorant Garamond', serif",
+              fontSize: '1.3rem', color: '#4a9a6a', fontStyle: 'italic'
+            }}>
+              ✓ Siparişiniz alındı!<br />
+              <span style={{ fontSize: '.85rem', color: '#aaa', fontStyle: 'normal' }}>En kısa sürede sizinle iletişime geçeceğiz.</span>
+            </div>
+          ) : items.length === 0 ? (
             <div style={{
               textAlign: 'center', paddingTop: '4rem',
               fontFamily: "'Cormorant Garamond', serif",
@@ -82,16 +101,18 @@ export default function CartSidebar({ open, onClose }) {
           )}
         </div>
 
-        {items.length > 0 && (
+        {items.length > 0 && !success && (
           <div style={{ padding: '1.5rem 1.8rem', borderTop: '1px solid var(--border)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.2rem' }}>
               <span style={{ fontSize: '.7rem', letterSpacing: '.1em', textTransform: 'uppercase', color: 'var(--muted)' }}>Toplam</span>
               <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.4rem' }}>₺{total.toLocaleString('tr-TR')}</span>
             </div>
-            <button style={{
-              width: '100%', padding: '.9rem', background: 'var(--ink)', color: '#fff', border: 'none',
-              fontSize: '.68rem', letterSpacing: '.2em', textTransform: 'uppercase', cursor: 'pointer'
-            }}>
+            <button
+              onClick={() => setCheckoutOpen(true)}
+              style={{
+                width: '100%', padding: '.9rem', background: 'var(--ink)', color: '#fff', border: 'none',
+                fontSize: '.68rem', letterSpacing: '.2em', textTransform: 'uppercase', cursor: 'pointer'
+              }}>
               Ödemeye Geç
             </button>
             <div style={{ fontSize: '.6rem', textAlign: 'center', color: 'var(--muted)', marginTop: '.8rem', letterSpacing: '.08em' }}>
@@ -100,6 +121,14 @@ export default function CartSidebar({ open, onClose }) {
           </div>
         )}
       </div>
+
+      <CheckoutModal
+        open={checkoutOpen}
+        onClose={() => setCheckoutOpen(false)}
+        items={items}
+        total={total}
+        onSuccess={handleSuccess}
+      />
     </>
   )
 }
