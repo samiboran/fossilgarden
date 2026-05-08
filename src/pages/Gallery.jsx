@@ -9,6 +9,10 @@ function Gallery() {
   const [searchParams] = useSearchParams()
   const [activeTag, setActiveTag] = useState((searchParams.get('category') || 'tümü').toLowerCase())
   const [search, setSearch] = useState(searchParams.get('search') || '')
+  useEffect(() => {
+  const s = searchParams.get('search')
+  if (s) setSearch(s)
+}, [searchParams])
   const [artworks, setArtworks] = useState([])
   const [loading, setLoading] = useState(true)
   const navigate = useNavigate()

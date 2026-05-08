@@ -15,9 +15,13 @@ export async function fetchArtworks({ tag, search } = {}) {
     }
   }
 
-  if (search) {
-    query = query.or(`title.ilike.%${search}%,artist.ilike.%${search}%`)
-  }
+  const s = search.toLowerCase()
+  .replace(/i/g, 'i').replace(/ı/g, 'i')
+  .replace(/ğ/g, 'g').replace(/ü/g, 'u')
+  .replace(/ş/g, 's').replace(/ö/g, 'o')
+  .replace(/ç/g, 'c')
+  
+query = query.or(`title.ilike.%${s}%,artist.ilike.%${s}%`)
 
   const { data, error } = await query
   if (error) { console.error('Fetch hatası:', error.message); return [] }
